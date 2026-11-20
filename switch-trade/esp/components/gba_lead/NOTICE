@@ -1,0 +1,16 @@
+gba_lead contains code copied from GB-Link-Switch-LDN
+  https://github.com/GB-Link/GB-Link-Switch-LDN, commit c972db4 (2026-10-21)
+  Licence: GNU Affero General Public License v3.0 (see that repository's LICENSE)
+
+  glp_host.c / glp_host.h        from firmware/common/pia_host.c / pia_host.h
+  glp_crypto.c / glp_crypto.h    from firmware/common/pia_crypto.c / pia_crypto.h
+  glp_reliable.c / glp_reliable.h from firmware/common/pia_reliable.c / pia_reliable.h
+  glp_bin.h                      from firmware/common/pia_bin.h
+  gl_lead_shim.c / gl_lead_shim.h from firmware/common/trade_shim.c / trade_shim.h (lead-role part)
+  gba_lead.c                     the BR_HOST role and room-record code of firmware/common/pia_bridge.c
+
+Modifications (kizuna, 2026-10-31): identifiers renamed (pia_ -> glp_, PIA_ -> GLP_, bin_ -> glb_,
+trade_shim_lead_* -> gls_lead_*); zstd decoding moved onto cport's session decoder context; the trade shim's
+reset-surviving event log removed; the LDN radio, UDP transport and adapter link replaced by kizuna's ldn_ap,
+dist_udp and rfu1_bridge. These files, and the firmware image they are linked into, are distributed under the
+AGPL-3.0.

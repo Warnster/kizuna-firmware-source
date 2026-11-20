@@ -1,0 +1,6 @@
+# Managed components pulled in through kz_mode_ble -> ota_update (OTA itself stays compiled out here, OTA_UPDATE_ENABLED=0).
+dependencies:
+  espressif/network_provisioning: "*"
+  espressif/cjson: "^1.7.19"
+  idf:
+    version: ">=5.0"
