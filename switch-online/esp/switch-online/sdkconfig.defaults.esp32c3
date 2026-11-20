@@ -1,0 +1,16 @@
+CONFIG_IDF_TARGET="esp32c3"
+
+# ---- C3 RAM budget for the static zstd decoder/encoder workspaces (pia_zstd.c, ~72 KB static).
+# Subset of 's trims: the receive-buffer counts and A-MPDU stay at their defaults, because with them
+# trimmed the board no longer registered as a member of the Switch's room.
+# app_main only idles after bring-up on the C3 (brain/usb/rfu1 run on their own tasks).
+CONFIG_ESP_MAIN_TASK_STACK_SIZE=4096
+CONFIG_ESP_WIFI_IRAM_OPT=n
+CONFIG_ESP_WIFI_ENTERPRISE_SUPPORT=n
+CONFIG_ESP_WIFI_NVS_ENABLED=n
+CONFIG_LWIP_MAX_SOCKETS=4
+CONFIG_HEAP_PLACE_FUNCTION_INTO_FLASH=y
+CONFIG_SPI_FLASH_ROM_IMPL=y
+
+# (integrate/main-swarm) SoftAP support stays ON: this app also hosts rooms (host_trade / th_start, ldn_ap_host), and the
+# bench-proven local trade always ran with it. The join-only SOFTAP=n trim belongs to apps that never host.

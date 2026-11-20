@@ -1,0 +1,98 @@
+# switch-online: the Switch side of the online GBA<->Switch trade. switch-trade's configuration plus the
+# OTA/push face (dual OTA slots, rollback) and no zstd compressor (the phone uplink needs the RAM; raw-block frames).
+# Switch Trade. Common to every target; sdkconfig.defaults.<target> adds the chip pin.
+CONFIG_BOOTLOADER_LOG_LEVEL_WARN=y
+CONFIG_BOOTLOADER_LOG_LEVEL=2
+CONFIG_LOG_DEFAULT_LEVEL_WARN=y
+CONFIG_LOG_DEFAULT_LEVEL=2
+CONFIG_COMPILER_OPTIMIZATION_SIZE=y
+CONFIG_ESPTOOLPY_FLASHSIZE_4MB=y
+CONFIG_ESPTOOLPY_FLASHSIZE="4MB"
+CONFIG_PARTITION_TABLE_CUSTOM=y
+CONFIG_PARTITION_TABLE_CUSTOM_FILENAME="partitions.csv"
+# Dual OTA slots (partitions.csv) -> rollback-capable bootloader.
+CONFIG_BOOTLOADER_APP_ROLLBACK_ENABLE=y
+# app_main only idles after bring-up (the brain/usb/rfu1 work runs on their own tasks): the C6 modes' 40 KB
+# main stack was for the inline GBA loop and is 36 KB of dead heap on the C3.
+CONFIG_ESP_MAIN_TASK_STACK_SIZE=4096
+# LDN: CCMP/CCM for the auth frame crypto; static ARP neighbours instead of DHCP for the Pia UDP path.
+CONFIG_MBEDTLS_CCM_C=y
+CONFIG_LWIP_DHCPS_STATIC_ENTRIES=y
+CONFIG_LWIP_UDP_RECVMBOX_SIZE=32
+# Station only, IPv4 only: no SoftAP support, no IPv6 -> smaller image + heap.
+CONFIG_LWIP_IPV6=n
+# Console = the native USB Serial/JTAG port (the board's only USB); the bench JSON ops arrive there.
+CONFIG_ESP_CONSOLE_USB_SERIAL_JTAG=y
+CONFIG_ESP_CONSOLE_SECONDARY_NONE=y
+
+# ---- ESP32-C3 RAM budget. LDN is a legacy-rate 11b/g link carrying a few hundred bytes per frame;
+# the Wi-Fi driver's throughput features cost DRAM we need more than speed. Measured effect.
+CONFIG_ESP_WIFI_IRAM_OPT=n
+CONFIG_ESP_WIFI_RX_IRAM_OPT=n
+CONFIG_ESP_WIFI_AMPDU_RX_ENABLED=n
+CONFIG_ESP_WIFI_AMPDU_TX_ENABLED=n
+CONFIG_ESP_WIFI_STATIC_RX_BUFFER_NUM=8
+CONFIG_ESP_WIFI_DYNAMIC_RX_BUFFER_NUM=16
+CONFIG_ESP_WIFI_DYNAMIC_TX_BUFFER_NUM=16
+CONFIG_ESP_WIFI_MGMT_SBUF_NUM=16
+CONFIG_ESP_WIFI_ENTERPRISE_SUPPORT=n
+CONFIG_ESP_WIFI_NVS_ENABLED=n
+CONFIG_LWIP_MAX_SOCKETS=4
+# Code that defaults to IRAM but has no timing role here -> flash (frees IRAM = DRAM on the C3).
+CONFIG_HEAP_PLACE_FUNCTION_INTO_FLASH=y
+CONFIG_SPI_FLASH_ROM_IMPL=y
+
+# ---- Bluetooth (T3): NimBLE peripheral only, one link, trimmed pools.
+CONFIG_BT_ENABLED=y
+CONFIG_BT_NIMBLE_ENABLED=y
+# CONFIG_BT_BLUEDROID_ENABLED is not set
+CONFIG_BT_NIMBLE_MEM_ALLOC_MODE_INTERNAL=y
+CONFIG_BT_NIMBLE_ROLE_PERIPHERAL=y
+CONFIG_BT_NIMBLE_ROLE_BROADCASTER=y
+CONFIG_BT_NIMBLE_ROLE_CENTRAL=n
+CONFIG_BT_NIMBLE_ROLE_OBSERVER=n
+CONFIG_BT_NIMBLE_MAX_CONNECTIONS=1
+CONFIG_BT_NIMBLE_ATT_PREFERRED_MTU=256
+CONFIG_BT_NIMBLE_HOST_TASK_STACK_SIZE=5120
+CONFIG_BT_NIMBLE_MSYS_1_BLOCK_COUNT=16
+CONFIG_BT_NIMBLE_MSYS_1_BLOCK_SIZE=128
+CONFIG_BT_NIMBLE_LOG_LEVEL_WARNING=y
+CONFIG_BT_NIMBLE_LOG_LEVEL=2
+# Bluetooth RAM trims for the shared-radio test: one peripheral link, no scanning, no SM, small pools.
+CONFIG_BT_CTRL_BLE_MAX_ACT=2
+CONFIG_BT_CTRL_BLE_SCAN_DUPL=n
+CONFIG_BT_NIMBLE_SECURITY_ENABLE=n
+CONFIG_BT_NIMBLE_MAX_BONDS=1
+CONFIG_BT_NIMBLE_MAX_CCCDS=4
+CONFIG_BT_NIMBLE_ACL_BUF_COUNT=8
+CONFIG_BT_NIMBLE_HCI_EVT_HI_BUF_COUNT=8
+CONFIG_BT_NIMBLE_HCI_EVT_LO_BUF_COUNT=4
+CONFIG_BT_NIMBLE_MSYS_1_BLOCK_COUNT=10
+
+# switch-online additions
+CONFIG_CPORT_ZSTD_NO_COMPRESS=y
+CONFIG_ESP_HTTPS_OTA_DECRYPT_CB=y
+CONFIG_ESP_PROTOCOMM_SUPPORT_SECURITY_VERSION_1=y
+CONFIG_MBEDTLS_CERTIFICATE_BUNDLE_CROSS_SIGNED_VERIFY=y
+# kizuna.trading (Cloudflare) chains to GTS Root R4 cross-signed by GlobalSign Root CA R1, which IDF 6.1's bundle
+# lacks (CROSS_SIGNED_VERIFY alone did not cover it): add R1, or TLS to the relay / updates fails (esp/certs).
+CONFIG_MBEDTLS_CUSTOM_CERTIFICATE_BUNDLE=y
+CONFIG_MBEDTLS_CUSTOM_CERTIFICATE_BUNDLE_PATH="../certs/relay_roots.pem"
+
+# memory trims for the single-C3 Switch side (Bluetooth + LDN Wi-Fi + Pia at once). Baseline session minimum was
+# 10.8 KB free with one dip to 1.7 KB.
+# Wi-Fi: LDN needs ~70 packets/s, not the default buffer depth
+CONFIG_ESP_WIFI_STATIC_RX_BUFFER_NUM=6
+CONFIG_ESP_WIFI_DYNAMIC_RX_BUFFER_NUM=10
+CONFIG_ESP_WIFI_DYNAMIC_TX_BUFFER_NUM=10
+CONFIG_ESP_WIFI_MGMT_SBUF_NUM=8
+# lwIP: UDP only on this board (TCP is the rare OTA path)
+CONFIG_LWIP_MAX_ACTIVE_TCP=4
+CONFIG_LWIP_MAX_UDP_PCBS=8
+CONFIG_LWIP_TCPIP_RECVMBOX_SIZE=16
+CONFIG_LWIP_TCP_SND_BUF_DEFAULT=2880
+CONFIG_LWIP_TCP_WND_DEFAULT=2880
+# Bluetooth: no test-mode (DTM) code in the controller; smaller second mbuf pool. Switching the controller's BLE_MASTER and
+# BLE_SCAN off as well made ble_gap_adv_start fail with HCI "invalid parameters" (rc=530), so they stay on.
+CONFIG_BT_CTRL_DTM_ENABLE=n
+CONFIG_BT_NIMBLE_MSYS_2_BLOCK_COUNT=16

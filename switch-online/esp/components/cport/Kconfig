@@ -1,0 +1,10 @@
+menu "cport (FRLG LDN brain)"
+    config CPORT_ZSTD_NO_COMPRESS
+        bool "Leave out the zstd compressor and its 40 KB static workspace (send stored zstd frames)"
+        default n
+        help
+            The join-role simulator (sim.c) compresses the Pia payloads it sends. A host-only image (hosted-trade) sends
+            stored zstd blocks (pia_host_zstd_stored) and never compresses, so the ~40 KB compression workspace in
+            pia_zstd.c is dead RAM there. With this set pia_compress() emits a stored (uncompressed) zstd frame in the
+            console's canonical header instead of compressing; decompression is unaffected.
+endmenu

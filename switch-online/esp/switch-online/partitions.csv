@@ -1,0 +1,16 @@
+# Partition table (4MB flash) - dual OTA slots + a data store.
+#
+# Was: one 1.9MB "factory" app + a 2.1MB storage partition (16 backup slots). OTA needs TWO app slots and
+# otadata, and the OTA-enabled image is ~1.6MB (Wi-Fi + TLS + provisioning stacks), so storage shrinks to
+# 0xA0000 = 4 backup slots (save_store slot = 0x21000). Each OTA slot has ~6% headroom over today's image;
+# the build fails loudly ("app partition is too small") if it ever outgrows them.
+# CHANGING THIS TABLE MOVES `storage`, so backups already stored on the C6 are not carried over: sync them to
+# the phone first. `nvs` (Wi-Fi credentials) keeps its offset.
+#
+# Name,   Type, SubType, Offset,   Size
+nvs,      data, nvs,     0x9000,   0x6000
+phy_init, data, phy,     0xf000,   0x1000
+otadata,  data, ota,     0x10000,  0x2000
+ota_0,    app,  ota_0,   0x20000,  0x1A0000
+ota_1,    app,  ota_1,   0x1C0000, 0x1A0000
+storage,  data, spiffs,  0x360000, 0xA0000

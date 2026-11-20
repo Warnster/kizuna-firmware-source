@@ -1,0 +1,15 @@
+gblink_standin contains code ported from GB-Link-Switch-LDN
+  https://github.com/GB-Link/GB-Link-Switch-LDN, commit c972db4 (2026-10-21)
+  Licence: GNU Affero General Public License v3.0 (see that repository's LICENSE)
+
+  ct_common.c / ct_common.h      from web/js/cable/translator.js (constants, sizeFromCount, sizeFromRequest, KeyRuns, KeyQueue)
+  ct_link.c / ct_link.h          from web/js/cable/celio.js, class CelioLink (lines 47-266)
+  ct_leader.c / ct_leader.h      from web/js/cable/leader.js (RfuLeader, leaderBeacon)
+  ct_steps.c / ct_steps.h        from web/js/cable/steps.js (StepFollower)
+  ct_reverse.c / ct_reverse.h    from web/js/cable/reverse.js (ReverseTranslator)
+  ct_translator.c / .h           from web/js/cable/translator.js (CableTranslator)
+
+Modifications (kizuna, 2026-11-02): ported from JavaScript to C with fixed-size storage, injected time and
+randomness, and no logging; Ruby/Sapphire dressing, the Emerald national-dex refusal and bypass, Socket.IO/uuid/retry
+transport and the reorder buffer removed; battle paths gated off by default. These files, and the firmware images they are
+linked into, are distributed under the AGPL-3.0.
