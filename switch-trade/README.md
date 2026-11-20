@@ -30,4 +30,4 @@ boot or flash encryption, so modified builds run.
 
 - The Nintendo Switch local-wireless key material. It is not part of this source; the adapter receives it at
   run time and keeps it in NVS. Without it the Switch side will not connect.
-- Other adapter modes and the RP2040 firmware. The RP2040 source (GPL-3.0) is published separately.
+- Other adapter modes and the RP2040 firmware. The RP2040 source (GPL-3.0) is in [`rp2040/`](../rp2040/).
